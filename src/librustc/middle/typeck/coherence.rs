@@ -38,7 +38,7 @@ use middle::typeck::infer::combine::Combine;
 use middle::typeck::infer::{InferCtxt, can_mk_subty};
 use middle::typeck::infer::{new_infer_ctxt, resolve_ivar};
 use middle::typeck::infer::{resolve_nested_tvar, resolve_type};
-use syntax::ast::{crate, def_id, def_mod, def_ty};
+use syntax::ast::{crate, def_id, def_mod, def_ty, def_trait};
 use syntax::ast::{item, item_struct, item_const, item_enum, item_fn};
 use syntax::ast::{item_foreign_mod, item_impl, item_mac, item_mod};
 use syntax::ast::{item_trait, item_ty, local_crate, method, node_id};
@@ -510,7 +510,7 @@ pub impl CoherenceChecker {
             provided_method_idents.insert(*ident);
         }
 
-        for ty::trait_methods(tcx, trait_did).each |method| {
+        for ty::trait_methods(tcx, trait_did).each |&method| {
             if provided_method_idents.contains(&method.ident) {
                 if !f(method) {
                     break;
@@ -950,7 +950,7 @@ pub impl CoherenceChecker {
                                                   crate_store,
                                                   def_id);
                     }
-                    dl_def(def_ty(def_id)) => {
+                    dl_def(def_trait(def_id)) => {
                         let tcx = self.crate_context.tcx;
                         let polytype = csearch::get_type(tcx, def_id);
                         match ty::get(polytype.ty).sty {

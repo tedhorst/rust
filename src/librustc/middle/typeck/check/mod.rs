@@ -1293,7 +1293,8 @@ pub fn check_expr_with_unifier(fcx: @mut FnCtxt,
 
                 // check each arg against "error", in order to set up
                 // all the node type bindings
-                FnSig {inputs: err_args(fcx.tcx(), args.len()),
+                FnSig {bound_lifetime_names: opt_vec::Empty,
+                       inputs: err_args(fcx.tcx(), args.len()),
                        output: ty::mk_err(fcx.tcx())}
             }
         };
@@ -2113,11 +2114,11 @@ pub fn check_expr_with_unifier(fcx: @mut FnCtxt,
       ast::expr_vstore(ev, vst) => {
         let typ = match ev.node {
           ast::expr_lit(@codemap::spanned { node: ast::lit_str(s), _ }) => {
-            let tt = ast_expr_vstore_to_vstore(fcx, ev, s.len(), vst);
+            let tt = ast_expr_vstore_to_vstore(fcx, ev, vst);
             ty::mk_estr(tcx, tt)
           }
           ast::expr_vec(ref args, mutbl) => {
-            let tt = ast_expr_vstore_to_vstore(fcx, ev, args.len(), vst);
+            let tt = ast_expr_vstore_to_vstore(fcx, ev, vst);
             let mutability;
             let mut any_error = false;
             let mut any_bot = false;
@@ -2151,7 +2152,7 @@ pub fn check_expr_with_unifier(fcx: @mut FnCtxt,
           ast::expr_repeat(element, count_expr, mutbl) => {
             let count = ty::eval_repeat_count(tcx, count_expr);
             check_expr_with_hint(fcx, count_expr, ty::mk_uint(tcx));
-            let tt = ast_expr_vstore_to_vstore(fcx, ev, count, vst);
+            let tt = ast_expr_vstore_to_vstore(fcx, ev, vst);
             let mutability = match vst {
                 ast::expr_vstore_mut_box | ast::expr_vstore_mut_slice => {
                     ast::m_mutbl
@@ -3170,7 +3171,10 @@ pub fn ty_param_bounds_and_ty_for_def(fcx: @mut FnCtxt,
       ast::def_upvar(_, inner, _, _) => {
         return ty_param_bounds_and_ty_for_def(fcx, sp, *inner);
       }
-      ast::def_ty(_) | ast::def_prim_ty(_) | ast::def_ty_param(*)=> {
+      ast::def_trait(_) |
+      ast::def_ty(_) |
+      ast::def_prim_ty(_) |
+      ast::def_ty_param(*)=> {
         fcx.ccx.tcx.sess.span_bug(sp, ~"expected value but found type");
       }
       ast::def_mod(*) | ast::def_foreign_mod(*) => {
@@ -3207,6 +3211,10 @@ pub fn instantiate_path(fcx: @mut FnCtxt,
 
     let ty_param_count = vec::len(*tpt.bounds);
     let ty_substs_len = vec::len(pth.types);
+
+    debug!("ty_param_count=%? ty_substs_len=%?",
+           ty_param_count,
+           ty_substs_len);
 
     // determine the region bound, using the value given by the user
     // (if any) and otherwise using a fresh region variable
@@ -3303,7 +3311,6 @@ pub fn type_is_c_like_enum(fcx: @mut FnCtxt, sp: span, typ: ty::t) -> bool {
 
 pub fn ast_expr_vstore_to_vstore(fcx: @mut FnCtxt,
                                  e: @ast::expr,
-                                 n: uint,
                                  v: ast::expr_vstore)
                               -> ty::vstore {
     match v {

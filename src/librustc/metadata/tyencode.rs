@@ -381,7 +381,7 @@ fn enc_onceness(w: @io::Writer, o: Onceness) {
     }
 }
 
-fn enc_bare_fn_ty(w: @io::Writer, cx: @ctxt, ft: &ty::BareFnTy) {
+pub fn enc_bare_fn_ty(w: @io::Writer, cx: @ctxt, ft: &ty::BareFnTy) {
     enc_purity(w, ft.purity);
     enc_abi(w, ft.abi);
     enc_fn_sig(w, cx, &ft.sig);
