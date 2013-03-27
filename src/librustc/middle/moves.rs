@@ -465,7 +465,7 @@ pub impl VisitContext {
             expr_method_call(callee, _, _, ref args, _) => { // callee.m(args)
                 // Implicit self is equivalent to & mode, but every
                 // other kind should be + mode.
-                self.use_receiver(expr.id, expr.span, callee, visitor);
+                self.use_receiver(callee, visitor);
                 self.use_fn_args(expr.callee_id, *args, visitor);
             }
 
@@ -667,7 +667,7 @@ pub impl VisitContext {
             return false;
         }
 
-        self.use_receiver(expr.id, expr.span, receiver_expr, visitor);
+        self.use_receiver(receiver_expr, visitor);
 
         // for overloaded operatrs, we are always passing in a
         // borrowed pointer, so it's always read mode:
@@ -720,8 +720,6 @@ pub impl VisitContext {
     }
 
     fn use_receiver(&self,
-                    expr_id: node_id,
-                    span: span,
                     receiver_expr: @expr,
                     visitor: vt<VisitContext>)
     {

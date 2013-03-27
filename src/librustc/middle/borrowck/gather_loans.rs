@@ -166,7 +166,7 @@ fn req_loans_in_expr(ex: @ast::expr,
         visit::visit_expr(ex, self, vt);
       }
 
-      ast::expr_method_call(rcvr, _, _, ref args, _) => {
+      ast::expr_method_call(_, _, _, ref args, _) => {
         let arg_tys = ty::ty_fn_args(ty::node_id_to_type(self.tcx(),
                                                          ex.callee_id));
         let scope_r = ty::re_scope(ex.id);
